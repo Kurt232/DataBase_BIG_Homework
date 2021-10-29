@@ -156,3 +156,6 @@ for epoch in range(num_epoches):
         n += x.shape[0]
         test_acc = evaluate(test_iter, net)
     print('epoch %d, loss %f, train_acc %f, test_acc %f' % (epoch, train_l_sum / n, train_acc_sum / n, test_acc))
+    '''
+    test 2
+    '''
