@@ -13,5 +13,5 @@
 import mysql.connector
 from database_module import *
 
-create_database()
+create_database(passwd="233333")
 

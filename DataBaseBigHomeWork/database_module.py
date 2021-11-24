@@ -16,11 +16,11 @@ import mysql.connector
 # 创建数据库
 # 岂不是暴露了我的密码？
 # test pass
-def create_database(dbname="liberal"):
+def create_database(passwd, host="localhost", user="root", dbname="liberal"):
     db = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        passwd="180014"
+        host=host,
+        user=user,
+        passwd=passwd
     )
     cursor = db.cursor()
     cursor.execute("create database if not exists "+dbname)
@@ -29,11 +29,11 @@ def create_database(dbname="liberal"):
 
 
 # 连接数据库
-def connect_database(dbname="liberal"):
+def connect_database(passwd, host="localhost", user="root", dbname="liberal"):
     db = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        passwd="180014",
+        host=host,
+        user=user,
+        passwd=passwd,
         database=dbname
     )
     cursor = db.cursor()
