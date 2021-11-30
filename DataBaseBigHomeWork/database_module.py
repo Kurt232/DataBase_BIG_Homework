@@ -116,6 +116,7 @@ def insert_book(info, db, cursor):
 
 
 # 插入借还书表
+# 完成借书手续
 # 还书时间无穷算出来
 # 应还书时间 直接基于借书时间算
 def insert_record_borrow(info, db, cursor):
@@ -158,12 +159,18 @@ def select_sum_book_on(book_no_s, cursor) -> tuple:
 
 # 查询读者基本信息
 # 调用时需要保证合法 len(info)!=0 以及内容正确
+# and 组合查询
+def select_and(info) -> str:
+    sql = "where " + info[0] + " = '" + info[1] + "'"
+    for i in range(2, len(info), 2):
+        sql += " and " + info[i] + " = '" + info[i+1] + "'"
+    return sql
+
+
 # 组合查询信息查询id
 def select_reader_id(info, cursor) -> list:
     sql = select(["id_reader", "reader"])
-    sql += "where " + info[0] + " = '" + info[1] + "'"
-    for i in range(2, len(info), 2):
-        sql += " and " + info[i] + " = '" + info[i+1] + "'"
+    sql += select(info)
     ls = []
     for i in select_execute(sql, cursor):
         ls.append(list(i))
@@ -173,9 +180,7 @@ def select_reader_id(info, cursor) -> list:
 # 组合查询所以信息
 def select_reader_all(info, cursor) -> list:
     sql = select(["*", "reader"])
-    sql += "where " + info[0] + " = '" + info[1] + "'"
-    for i in range(2, len(info), 2):
-        sql += " and " + info[i] + " = '" + info[i + 1] + "'"
+    sql += select(info)
     ls = []
     for i in select_execute(sql, cursor):
         ls.append(list(i))
@@ -189,8 +194,54 @@ def select_record(id_r, cursor) -> tuple:
     return select_execute(sql, cursor)
 
 
-# 各种修改语句
+# 组合查询书籍信息
+def select_book_all(info, cursor) -> list:
+    sql = select(["*", "book"])
+    sql += select_and(info)
+    ls = []
+    for i in select_execute(sql, cursor):
+        ls.append(list(i))
+    return ls
 
+
+def select_book_id(info, cursor) -> list:
+    sql = select(["book_id", "book"])
+    sql += select_and(info)
+    ls = []
+    for i in select_execute(sql, cursor):
+        ls.append(list(i))
+    return ls
+
+
+# 各种修改语句
+def update_execute(sql, db, cursor):
+    cursor.execute(sql)
+    db.commit()
+
+
+# 修改书籍基本信息
+# 约束交给调用它的函数
+# 按照book_id来修改 这样最稳妥 更新界面设置成 展示 原始数据 然后 在原来的基础上更新 所以 info 是所有数据
+def update(table, attribute, info, db, cursor):
+    sql = "update " + table + " set"
+    for i in range(1, len(attribute)):
+        sql += " " + attribute[i] + " = '" + info[i] + "'"
+    sql += "where " + attribute[0] + " = '" + info[0] + "'"
+    update_execute(sql, db, cursor)
+
+
+# 更新读者信息
+def update_reader(attribute_reader, info, db, cursor):
+    update(table="reader", attribute=attribute_reader, info=info, db=db, cursor=cursor)
+
+
+# 更新书籍信息
+def update_book(attribute_book, info, db, cursor):
+    update(table="book", attribute=attribute_book, info=info, db=db, cursor=cursor)
+
+
+# 更新借还书表
+# 即完成还书手续
 # 各种删除语句
 
 
