@@ -70,7 +70,7 @@ def creat_table_reader(cursor):
 
 
 # 借还书表
-# attributes: 读者号 书籍号 借书日期 应该还书还书日期 out_date(初始值为-1 正常还书为0 超期>0)
+# attributes: 读者号 书籍号 借书日期 应还书日期 out_date(初始值为-1 正常还书为0 超期>0)
 # date 按照 yyyy-mm-dd 就是字符串
 def creat_table_record(cursor):
     creat_table(["record", "id_record int not null primary key auto_increment", "id_reader int not null foreign key",
@@ -182,14 +182,14 @@ def select_and(info) -> str:
 # 组合查询信息查询id
 def select_reader_id(info, cursor) -> list:
     sql = select(["id_reader", "reader"])
-    sql += select(info)
+    sql += select_and(info)
     ls = []
     for i in select_execute(sql, cursor):
         ls.append(list(i))
     return ls
 
 
-# 组合查询所有信息 不能包含id 还需要
+# 组合查询所有读者信息 不能包含id 还需要
 def select_reader_all(info, cursor) -> list:
     sql = select(["*", "reader"])
     sql += select_and(info)
@@ -199,11 +199,11 @@ def select_reader_all(info, cursor) -> list:
     return ls
 
 
-# 查看读者借还书信息
-def select_record(id_r, cursor) -> tuple:
-    sql = select(['*', 'record'])
-    sql += "where id_r = " + id_r + ""
-    return select_execute(sql, cursor)
+# info = id_reader
+def select_reader(info, cursor) -> list:
+    sql = select(["certificate, name, sex, dept, grade", "reader"])
+    sql += "where id_reader =" + info
+    return list(select_execute(sql, cursor))
 
 
 # 组合查询书籍信息
@@ -217,12 +217,19 @@ def select_book_all(info, cursor) -> list:
 
 
 def select_book_id(info, cursor) -> list:
-    sql = select(["book_id", "book"])
+    sql = select(["id_book", "book"])
     sql += select_and(info)
     ls = []
     for i in select_execute(sql, cursor):
         ls.append(list(i))
     return ls
+
+
+# 用id 查找所有 信息 用于 update_
+def select_update_all_id(table, info, cursor) -> list:
+    sql = select(["*", table])
+    sql += "where id_" + table + " = " + info
+    return list(select_execute(sql, cursor))
 
 
 # 查询超期未还学生
@@ -238,11 +245,20 @@ def select_out_date(info, cursor) -> list:
     return ls
 
 
-# 查看某个读者是否还书
-# info = [reader_id, interval]
+# 查看某个读者是逾期
+# info = [id_reader, interval]
 def select_out_reader(info, cursor) -> int:
     sql = select(["count(id_reader)", "record"])
     sql += "where id_reader = " + info[0] + " and out_date = -1 and to_days(now()) - to_days(date_borrow) >= " + info
+    num = select_execute(sql, cursor)  # 虽然是tuple 但是len == 1
+    return num[0]
+
+
+# 查看某个读者是否借书
+# info = id_reader
+def select_reader_is_borrow(info, cursor) -> int:
+    sql = select(["count(id_reader)", "record"])
+    sql += "where id_reader = " + info[0] + " and out_date = -1"
     num = select_execute(sql, cursor)  # 虽然是tuple 但是len == 1
     return num[0]
 
@@ -254,6 +270,21 @@ def select_record_to_return(info, cursor) -> list:
     sql = select(["*", "record"])
     sql += "where id_reader = " + info[0] + " and id_book = " + info[1] + " and out_date = -1"
     return list(select_execute(sql, cursor))  # 插入record表的逻辑确定了 只能返回一条记录
+
+
+# 查看读者借还书信息 未还书在上面 升序
+# info = id_reader
+def select_record(info, cursor) -> list:
+    sql = select(['*', 'record order by out_date '])
+    sql += "where id_reader = " + info + ""
+    return list(select_execute(sql, cursor))
+
+
+# info id_book
+def select_book_off(info, cursor) -> bool:
+    sql = select(["out_date", "record"])
+    sql += "where id_book = " + info
+    return select_execute(sql, cursor)[0] != -1  # 约束规定了 返回值是一个长度为1的元组
 
 
 # 各种修改语句
@@ -295,14 +326,14 @@ def update_record(attribute_book, info, db, cursor):
 # 使用时保证info的正确性 info[attribute, value]
 def delete_check(info, cursor) -> bool:
     sql = select([info[0], "record"])
-    sql += "where " + info[0] + " ='" + info[1] + "' and out_date = -1 "
+    sql += "where " + info[0] + " = " + info[1] + " and out_date = -1 "
     result = select_execute(sql, cursor)  # info 的正确性保证 result = (info[0],) or result = (,)
     return len(result) == 0
 
 
 # 删除已有数据
 def delete(table, info, db, cursor):
-    sql = "delete from " + table + "where " + info[0] + " = '" + info[1] + "'"
+    sql = "delete from " + table + "where " + info[0] + " = " + info[1]
     cursor.execute(sql)
     db.commit()
 

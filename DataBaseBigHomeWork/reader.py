@@ -55,6 +55,13 @@ class Reader(User):
         update_record(attribute, ls, self.db, self.cursor)
         return beta
 
+    # 返回内容 [0]是id_reader
+    def view_info(self) -> list:
+        return select_reader(self.id, self.cursor)
+
+    # 未还书的记录再上面，上级界面检测到 out_date为-1即不显示即可
+    def view_record(self) -> list:
+        return select_record(self.id, self.cursor)
 
 
 

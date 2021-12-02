@@ -29,14 +29,14 @@ class User:
     # 若为空 用 "" 标注
     # 输出的时候是三列 书籍信息 总数 在馆数量
     def query_book(self, info) -> list:
-        attribute_book = ["book_no", "book_name", "publisher", "date_publish", "author", "book"]
+        attribute_book = ["id_book", "book_no", "book_name", "publisher", "date_publish", "author", "book"]
         info1 = []
         ls_info = []
         ls_sum = []
         ls_on = []
         for i in range(0, 6):
             if info[i] != "":
-                info1.append(attribute_book[i])
+                info1.append(attribute_book[i+1])
                 if isinstance(info[i], str):
                     info1.append("'" + info[i] + "'")
                 else:
@@ -50,5 +50,3 @@ class User:
             ls_sum.append(select_sum_book(book_no_s=ls_info[i][0], cursor=self.cursor))
             ls_on.append(select_sum_book_on(book_no_s=ls_info[i][0], cursor=self.cursor))
         return [*ls_info, *ls_sum, *ls_on]  # 语法糖
-
-
