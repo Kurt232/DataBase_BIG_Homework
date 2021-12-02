@@ -71,7 +71,7 @@ def creat_table_reader(cursor):
 
 # 借还书表
 # attributes: 读者号 书籍号 借书日期 应该还书还书日期 out_date(初始值为-1 正常还书为0 超期>0)
-# date 按照 yy--mm-dd
+# date 按照 yyyy-mm-dd 就是字符串
 def creat_table_record(cursor):
     creat_table(["record", "id_record int not null primary key auto_increment", "id_r int not null foreign key",
                  "id_book int not null foreign key", "date_borrow date", "date_return date", "out_date int"], cursor)
@@ -137,26 +137,36 @@ def select(info) -> str:
     return sql
 
 
+def select_distinct(info) -> str:
+    sql = "select distinct "+info[0]
+    for i in info[1:-2]:
+        sql += ", "+i
+    sql += " from "+info[-1]
+    return sql
+
+
 def select_execute(sql, cursor) -> tuple:
     cursor.execute(sql)
     return cursor.fetchall()
 
 
 # 查看某本书籍总数
-def select_sum_book(book_no_s, cursor) -> tuple:
+def select_sum_book(book_no_s, cursor) -> int:
     sql = select(["count(book_no)", "book"])
     sql += "where book_no = " + book_no_s
-    return select_execute(sql, cursor)
+    num = select_execute(sql, cursor)
+    return num[0]
 
 
 # 查看某书当前在馆数量
 # 嵌套了两层 子查询
-def select_sum_book_on(book_no_s, cursor) -> tuple:
+def select_sum_book_on(book_no_s, cursor) -> int:
     sql = select(["count(book_no)", "book, record_borrow"])
     sql += "where not exists ( select * from record_borrow where id_r_b in"
     sql += "(" + select(["id_r_b", "book"])
     sql += "where book_no = " + book_no_s + "))"
-    return select_execute(sql, cursor)
+    num = select_execute(sql, cursor)
+    return num[0]
 
 
 # 查询读者基本信息
@@ -179,10 +189,10 @@ def select_reader_id(info, cursor) -> list:
     return ls
 
 
-# 组合查询所以信息
+# 组合查询所有信息 不能包含id 还需要
 def select_reader_all(info, cursor) -> list:
     sql = select(["*", "reader"])
-    sql += select(info)
+    sql += select_and(info)
     ls = []
     for i in select_execute(sql, cursor):
         ls.append(list(i))
@@ -198,7 +208,7 @@ def select_record(id_r, cursor) -> tuple:
 
 # 组合查询书籍信息
 def select_book_all(info, cursor) -> list:
-    sql = select(["*", "book"])
+    sql = select_distinct(["book_no, book_name, publisher, date_publish, author, abstract", "book"])
     sql += select_and(info)
     ls = []
     for i in select_execute(sql, cursor):
@@ -226,6 +236,15 @@ def select_out_date(info, cursor) -> list:
     for i in select_execute(sql, cursor):
         ls.append(list(i))
     return ls
+
+
+# 查看某个读者是否还书
+# info = [reader_id, interval]
+def select_out_reader(info, cursor) -> int:
+    sql = select(["count(id_reader)", "record"])
+    sql += "where id_reader = " + info[0] + " and out_date = -1 and to_days(now()) - to_days(date_borrow) >= " + info
+    num = select_execute(sql, cursor)  # 虽然是tuple 但是len == 1
+    return num[0]
 
 
 # 各种修改语句
