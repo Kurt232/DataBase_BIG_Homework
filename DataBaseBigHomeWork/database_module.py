@@ -73,7 +73,7 @@ def creat_table_reader(cursor):
 # attributes: 读者号 书籍号 借书日期 应该还书还书日期 out_date(初始值为-1 正常还书为0 超期>0)
 # date 按照 yyyy-mm-dd 就是字符串
 def creat_table_record(cursor):
-    creat_table(["record", "id_record int not null primary key auto_increment", "id_r int not null foreign key",
+    creat_table(["record", "id_record int not null primary key auto_increment", "id_reader int not null foreign key",
                  "id_book int not null foreign key", "date_borrow date", "date_return date", "out_date int"], cursor)
 
 
@@ -247,6 +247,15 @@ def select_out_reader(info, cursor) -> int:
     return num[0]
 
 
+# 还书时查找对应的记录
+# info = [id_reader, id_book]
+# 返回 *
+def select_record_to_return(info, cursor) -> list:
+    sql = select(["*", "record"])
+    sql += "where id_reader = " + info[0] + " and id_book = " + info[1] + " and out_date = -1"
+    return list(select_execute(sql, cursor))  # 插入record表的逻辑确定了 只能返回一条记录
+
+
 # 各种修改语句
 def update_execute(sql, db, cursor):
     cursor.execute(sql)
@@ -260,8 +269,8 @@ def update_execute(sql, db, cursor):
 def update(table, attribute, info, db, cursor):
     sql = "update " + table + " set"
     for i in range(1, len(attribute)):
-        sql += " " + attribute[i] + " = '" + info[i] + "'"
-    sql += "where " + attribute[0] + " = '" + info[0] + "'"
+        sql += " " + attribute[i] + " = " + info[i]
+    sql += "where " + attribute[0] + " = " + info[0]  # 没有修改id
     update_execute(sql, db, cursor)
 
 
