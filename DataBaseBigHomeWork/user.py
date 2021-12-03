@@ -19,7 +19,7 @@ from database_module import *
 class User:
     # 用户登录 由上级函数控制 登录函数
     # cursor 是数据库的指针
-    def __init__(self, account, cursor, db):
+    def __init__(self, account, db, cursor):
         self.account = account
         self.cursor = cursor
         self.db = db

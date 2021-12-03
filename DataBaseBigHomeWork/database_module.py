@@ -17,20 +17,20 @@ import mysql.connector
 # 岂不是暴露了我的密码？
 # test pass
 # login is List<string>
-def create_database(login, dbname="liberal"):
+def create_database(login, dbname="library"):
     db = mysql.connector.connect(
         host=login[0],
         user=login[1],
         passwd=login[2]
     )
     cursor = db.cursor()
-    cursor.execute("create database if not exists "+dbname)
+    cursor.execute("create database if not exists " + dbname)
     db.close()
     cursor.close()
 
 
 # 连接数据库
-def connect_database(login, dbname="liberal"):
+def connect_database(login, dbname="library"):
     db = mysql.connector.connect(
         host=login[0],
         user=login[1],
@@ -52,11 +52,11 @@ def close_connect(db, cursor):
 # table_info is List of string
 # table_info[0] : table_name
 # table_info[i] : attributes
-def creat_table(table_info, cursor):
+def create_table(table_info, cursor):
     # [db, cursor] = connect_database(dbname)
-    sql = "create table if not exists "+table_info[0]+" ("
-    for i in table_info[1:]:
-        sql += i+", "
+    sql = "create table if not exists " + table_info[0] + " ( " + table_info[1]
+    for i in table_info[2:]:
+        sql += ", " + i
     sql += " )"
     cursor.execute(sql)
     # close_connect(db, cursor)
@@ -64,25 +64,28 @@ def creat_table(table_info, cursor):
 
 # 读者表
 # attributes: 读者号 证件号 名字 性别 系号 年级
-def creat_table_reader(cursor):
-    creat_table(["reader", "id_reader int not null primary key auto_increment", "certificate int", "name varchar(255)",
-                 "sex enum('male','female') not null", "dept varchar(255)", "grade int"], cursor)
+def create_table_reader(cursor):
+    create_table(["reader", "id_reader int not null primary key auto_increment", "certificate bigint",
+                  "name varchar(255)", "sex enum('male','female') not null",
+                  "dept varchar(255)", "grade int"], cursor)
 
 
 # 借还书表
 # attributes: 读者号 书籍号 借书日期 应还书日期 out_date(初始值为-1 正常还书为0 超期>0)
 # date 按照 yyyy-mm-dd 就是字符串
-def creat_table_record(cursor):
-    creat_table(["record", "id_record int not null primary key auto_increment", "id_reader int not null foreign key",
-                 "id_book int not null foreign key", "date_borrow date", "date_return date", "out_date int"], cursor)
+def create_table_record(cursor):
+    create_table(["record", "id_record int not null primary key auto_increment", "id_reader int not null",
+                  "id_book int not null", "date_borrow date", "date_return date", "out_date int",
+                  "foreign key (id_reader) references reader(id_reader)",
+                  "foreign key (id_book) references book(id_book)"], cursor)
 
 
 # 书籍表
 # attributes: 书籍id 书号 书名 出版社 出版日期 作者 内容摘要
-def creat_table_book(cursor):
-    creat_table(["book", "id_book int not null primary key auto_increment", "book_no int not null",
-                 "book_name varchar(255) not null", "publisher varchar(255)", "date_publish date",
-                 "author varchar(255)", "abstract varchar(255)"], cursor)
+def create_table_book(cursor):
+    create_table(["book", "id_book int not null primary key auto_increment", "book_no bigint not null",
+                  "book_name varchar(255) not null", "publisher varchar(255)", "date_publish date",
+                  "author varchar(255)", "abstract varchar(511)"], cursor)
 
 
 # abstract 255 会不会有点小?
@@ -90,10 +93,23 @@ def creat_table_book(cursor):
 
 # 各种插入语句
 def insert(info) -> str:
-    sql = "(" + info[0]
+    # sql = "( "
+    # if isinstance(info[0], str):
+    #     sql += info[0]
+    # else:
+    #     sql += str(info[0])
+    # for i in info[1:]:
+    #     sql += ", "
+    #     if isinstance(i, str):
+    #         sql += i
+    #     else:
+    #         sql += str(i)
+    # sql += ")"
+    # 全部默认为str
+    sql = "( " + info[0]
     for i in info[1:]:
-        sql += " ," + i
-    sql += ")"
+        sql += ", " + info[1]
+    sql += " )"
     return sql
 
 
@@ -130,18 +146,18 @@ def insert_record_borrow(info, db, cursor):
 # 我甚至不需要知道cursor.fetchall()返回类型 -好像是一个tuple
 # 如果是字符串 info中应该是 info = ["'name'", "'sex'"]
 def select(info) -> str:
-    sql = "select "+info[0]
+    sql = "select " + info[0]
     for i in info[1:-2]:
-        sql += ", "+i
-    sql += " from "+info[-1]
+        sql += ", " + i
+    sql += " from " + info[-1]
     return sql
 
 
 def select_distinct(info) -> str:
-    sql = "select distinct "+info[0]
+    sql = "select distinct " + info[0]
     for i in info[1:-2]:
-        sql += ", "+i
-    sql += " from "+info[-1]
+        sql += ", " + i
+    sql += " from " + info[-1]
     return sql
 
 
@@ -175,7 +191,7 @@ def select_sum_book_on(book_no_s, cursor) -> int:
 def select_and(info) -> str:
     sql = "where " + info[0] + " = " + info[1]
     for i in range(2, len(info), 2):
-        sql += " and " + info[i] + " = " + info[i+1]
+        sql += " and " + info[i] + " = " + info[i + 1]
     return sql
 
 
@@ -202,7 +218,7 @@ def select_reader_all(info, cursor) -> list:
 # info = id_reader
 def select_reader(info, cursor) -> list:
     sql = select(["certificate, name, sex, dept, grade", "reader"])
-    sql += "where id_reader =" + info
+    sql += "where id_reader = " + info
     return list(select_execute(sql, cursor))
 
 

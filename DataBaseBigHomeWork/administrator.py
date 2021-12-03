@@ -19,32 +19,36 @@ from database_module import *
 
 
 class Administrator(User):
-    def __init__(self, name, account, cursor, db):
-        super().__init__(account, cursor, db)
+    def __init__(self, name, account, db, cursor):
+        super().__init__(account, db, cursor)
         self.name = name
 
     """add"""
+    # pass test
     # 规定添加书籍各项数据都要正确 为空的话不予添加
+    # book_no book_name publisher date_publish author abstract
     def add_book(self, info):
         info1 = []
         # 类型检查 没有检查 publish_date 的 date类型
         for i in info:
-            if isinstance(str, i):
+            if isinstance(i, str):
                 info1.append("'" + i + "'")
             else:
-                info1.append(i)
-        insert_book(info, self.db, self.cursor)
+                info1.append(str(i))
+        insert_book(info1, self.db, self.cursor)
 
+    # pass test
     # 规定增加读者各项数据都要正确
+    # certificate name sex dept grad
     def add_reader(self, info):
         info1 = []
         # str类型检查
         for i in info:
-            if isinstance(str, i):
+            if isinstance(i, str):
                 info1.append("'" + i + "'")
             else:
                 info1.append(i)
-        insert_reader(info, self.db, self.cursor)
+        insert_reader(info1, self.db, self.cursor)
 
     """delete"""
     # info = id_book
