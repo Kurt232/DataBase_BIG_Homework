@@ -93,22 +93,10 @@ def create_table_book(cursor):
 
 # 各种插入语句
 def insert(info) -> str:
-    # sql = "( "
-    # if isinstance(info[0], str):
-    #     sql += info[0]
-    # else:
-    #     sql += str(info[0])
-    # for i in info[1:]:
-    #     sql += ", "
-    #     if isinstance(i, str):
-    #         sql += i
-    #     else:
-    #         sql += str(i)
-    # sql += ")"
-    # 全部默认为str
+    # 全部默认为str 交由上级处理
     sql = "( " + info[0]
     for i in info[1:]:
-        sql += ", " + info[1]
+        sql += ", " + i
     sql += " )"
     return sql
 

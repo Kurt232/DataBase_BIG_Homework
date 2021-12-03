@@ -47,7 +47,7 @@ class Administrator(User):
             if isinstance(i, str):
                 info1.append("'" + i + "'")
             else:
-                info1.append(i)
+                info1.append(str(i))
         insert_reader(info1, self.db, self.cursor)
 
     """delete"""
@@ -80,9 +80,9 @@ class Administrator(User):
                 info1.append(ls[i])
             else:
                 if isinstance(str, info[i]):
-                    info1.append("'" + ls[i] + "'")
+                    info1.append("'" + info[i] + "'")
                 else:
-                    info1.append(ls[i])
+                    info1.append(str(info[i]))
         update_book(attribute, info1, self.db, self.cursor)
 
     # 按照之前约定若是没有改变原有参数 以""表示
@@ -96,9 +96,9 @@ class Administrator(User):
                 info1.append(ls[i])
             else:
                 if isinstance(str, info[i]):
-                    info1.append("'" + ls[i] + "'")
+                    info1.append("'" + info[i] + "'")
                 else:
-                    info1.append(ls[i])
+                    info1.append(str(info[i]))
         update_reader(attribute, info1, self.db, self.cursor)
 
     """ 查看读者界面"""
@@ -115,7 +115,7 @@ class Administrator(User):
                 if isinstance(info[i], str):
                     info1.append("'" + info[i] + "'")
                 else:
-                    info1.append(info[i])
+                    info1.append(str(info[i]))
         length = len(info1)
         return select_reader_all(info1, self.cursor)
 
