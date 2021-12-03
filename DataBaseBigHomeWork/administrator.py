@@ -41,32 +41,29 @@ class Administrator(User):
     # 规定增加读者各项数据都要正确
     # certificate name sex dept grad
     def add_reader(self, info):
-        info1 = []
-        # str类型检查
-        for i in info:
-            if isinstance(i, str):
-                info1.append("'" + i + "'")
-            else:
-                info1.append(str(i))
+        info1 = process_list(info)
         insert_reader(info1, self.db, self.cursor)
 
-    """delete"""
+    """delete"""    # pass test
     # info = id_book
     # 有书未还不能删除
     def delete_book(self, info) -> bool:
-        flag = select_book_off(info, self.cursor)
+        info1 = process_val(info)
+        flag = select_book_off(info1, self.cursor)
         if not flag:
             return False
-        delete_record(info, self.db, self.cursor)
+        delete_book(info1, self.db, self.cursor)
         return True
 
     # info = id_reader
     # 有书未还不能删除
     def delete_reader(self, info) -> bool:
-        flag = select_reader_is_borrow(info, self.cursor)
-        if not flag:
+        info1 = process_val(info)
+        flag = select_reader_is_borrow(info1, self.cursor)
+        if flag > 0:
             return False
-        delete_reader(info, self.db, self.cursor)
+        delete_reader(info1, self.db, self.cursor)
+        return True
 
     """update"""
     # 按照之前约定若是没有改变原有参数 以""表示
@@ -74,15 +71,12 @@ class Administrator(User):
     def update_book(self, info):
         attribute = ["id_book", "book_no", "book_name", "publisher", "date_publish", "author", "abstract"]
         ls = select_update_all_id("book", info, self.cursor)
-        info1 = [ls[0]]
+        info1 = [str(ls[0])]
         for i in range(1, len(ls)):
             if info[i] == "":
                 info1.append(ls[i])
             else:
-                if isinstance(str, info[i]):
-                    info1.append("'" + info[i] + "'")
-                else:
-                    info1.append(str(info[i]))
+                info1.append(process_val(info[i]))
         update_book(attribute, info1, self.db, self.cursor)
 
     # 按照之前约定若是没有改变原有参数 以""表示
@@ -90,18 +84,16 @@ class Administrator(User):
     def update_reader(self, info):
         attribute = ["id_reader", "certificate", "name", "sex", "dept", "grade"]
         ls = select_update_all_id("reader", info, self.cursor)
-        info1 = [ls[0]]
+        info1 = [str(ls[0])]
         for i in range(1, len(ls)):
             if info[i] == "":
                 info1.append(ls[i])
             else:
-                if isinstance(str, info[i]):
-                    info1.append("'" + info[i] + "'")
-                else:
-                    info1.append(str(info[i]))
+                info1.append(process_val(info[i]))
         update_reader(attribute, info1, self.db, self.cursor)
 
     """ 查看读者界面"""
+    # pass test
     # 组合查询读者
     # 返回值有 id_reader
     # 按照之前约定若是没有改变原有参数 以""表示
@@ -112,27 +104,26 @@ class Administrator(User):
         for i in range(0, 5):
             if info[i] != "":
                 info1.append(attribute[i+1])
-                if isinstance(info[i], str):
-                    info1.append("'" + info[i] + "'")
-                else:
-                    info1.append(str(info[i]))
-        length = len(info1)
+                info1.append(process_val(info[i]))
         return select_reader_all(info1, self.cursor)
 
+    # pass test
     # 查看详细信息
     # 返回内容 [0]是id_reader
     # info = id_reader
     # -*- 这个框下方就是 修改同学信息按钮 -*-
     def view_reader_info(self, info) -> list:
-        return select_reader(info, self.cursor)
+        return select_reader(process_list(info), self.cursor)
 
+    # pass test
     # 查看借还书情况
     # 未还书的记录再上面，上级界面检测到 out_date为-1即不显示即可
     # info = id_reader
     def view_reader_record(self, info) -> list:
-        return select_record(info, self.cursor)
+        return select_record(process_val(info), self.cursor)
 
     """查询哪些读者没有及时还书界面"""
+    # pass test
     # interval 是借书期限 也是全局变量
     def query_out_date(self, interval) -> list:
-        return select_out_date(interval, self.cursor)
+        return select_out_date(str(interval), self.cursor)

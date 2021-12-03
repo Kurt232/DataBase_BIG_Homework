@@ -24,13 +24,57 @@ else:
 # Administrator
 [db, cursor] = connect_database(["localhost", "library", "123456"])
 test_admin = Administrator("test", '123456789', db, cursor)
+test_reader = Reader(1, "test", db, cursor)
+test_reader2 = Reader(2, "test", db, cursor)
+"""test add"""
 # test_admin.add_book([1234566, "高等数学", "高等教育出版社", "2018-8-10", "同济大学", "高速退学"])
 # test_admin.add_book([1234567, "线性代数", "高等教育出版社", "2018-8-10", "同济大学", "先行呆数"])
-# test_admin.add_reader([20201414601112, "杜云来", "male", "计算机系", "2020"])
 # test_admin.add_book([9787302423287, "机器学习", "清华大学出版社", "2016-1-10", "周志华", "机器学习是计算机科学领域的重要分支领域。"
-#                                                                           "本书作为该领域的入门教材，在内容上尽可能涵盖机器学习基础知识的各个方面"])
+#                                                                            "本书作为该领域的入门教材，在内容上尽可能涵盖机器学习基础知识的各个方面"])
+# test_admin.add_reader([20201414601112, "杜云来", "male", "计算机系", "2020"])
 # test_admin.add_reader([2020141461111, "杜文杰", "male", "计算机系", "2020"])
 # test_admin.add_reader([2020141461112, "黎昊", "male", "软件工程系", "2020"])
-test_reader = Reader('1', "test", cursor, db)
-
+# for i in test_admin.query_book(["", "", "高等教育出版社", "", "", ""]):
+#    print(i)
+"""Reader"""
+"""借书测试"""
+# test_reader.borrow_book(2, 30)
+# test_reader2.borrow_book(3, 30)
+# days = test_reader.borrow_book(3, 30)
+# if days > 0:
+#     print("有 " + str(days) + " 待还")
+# else:
+#     print("success")
+"""还书测试"""
+# days = test_reader.return_book(4, 30)
+# if days > 0:
+#     print("超期 " + str(days) + " 天")
+# else:
+#     print("未超期")
+"""查看信息"""
+# for i in test_reader.view_info():
+#     print(i)
+# for i in test_reader.view_record():
+#     print(i)
+# print("pass")
+"""Administrator"""
+# if test_admin.delete_reader(1):
+#     print("success")
+# else:
+#     print("failure")
+# if test_admin.delete_book(1):
+#     print("success")
+# else:
+#     print("failure")
+# if test_admin.delete_book(24):
+#     print("success")
+# else:
+#     print("failure")
+# for i in test_admin.query_reader(["", "", "", "", 2020]):
+#     print(i)
+# for i in test_admin.view_reader_record(1):
+#     print(i)
+for i in test_admin.query_out_date(30):
+    print(i)
+close_connect(db, cursor)
 

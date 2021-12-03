@@ -21,9 +21,10 @@ class User:
     # cursor 是数据库的指针
     def __init__(self, account, db, cursor):
         self.account = account
-        self.cursor = cursor
         self.db = db
+        self.cursor = cursor
 
+    # pass test
     # info 的约定如下 长度为 6
     # 包括：书号、书名、出版社、出版日期、作者、内容摘要
     # 若为空 用 "" 标注
@@ -31,22 +32,19 @@ class User:
     def query_book(self, info) -> list:
         attribute_book = ["id_book", "book_no", "book_name", "publisher", "date_publish", "author", "book"]
         info1 = []
-        ls_info = []
+        ls_info = []  # 这里面没有 id_book
         ls_sum = []
         ls_on = []
         for i in range(0, 6):
             if info[i] != "":
                 info1.append(attribute_book[i+1])
-                if isinstance(info[i], str):
-                    info1.append("'" + info[i] + "'")
-                else:
-                    info1.append(info[i])
+                info1.append(process_val(info[i]))
         length = len(info1)
         if length == 0:
             return []
-        ls_info.extend(select_book_all(info=info1, cursor=self.cursor))
-        for i in range(0, length):
+        ls_info.extend(select_book_info(info=info1, cursor=self.cursor))
+        for i in ls_info:
             # info[i][0] 是 book_no
-            ls_sum.append(select_sum_book(book_no_s=ls_info[i][0], cursor=self.cursor))
-            ls_on.append(select_sum_book_on(book_no_s=ls_info[i][0], cursor=self.cursor))
+            ls_sum.append(select_sum_book(book_no=str(i[0]), cursor=self.cursor))
+            ls_on.append(select_sum_book_on(book_no=str(i[0]), cursor=self.cursor))
         return [*ls_info, *ls_sum, *ls_on]  # 语法糖
