@@ -39,7 +39,7 @@ attributes:
 7. 内容摘要 "abstract" varchar(255)
 
 
-### 功能
+## 功能
 - [x] 能够通过书籍基本信息（包括：书号、书名、出版社、出版日期、作者、内容摘要）单个或以AND方式组合多个条件查询书籍信息
 - [x] 对于每一种书籍，除可查看其基本信息之外还可查看其总数以及目前在馆数量  
 - [x] 可增添新的书籍  
@@ -77,4 +77,7 @@ attributes:
 ## 测试
 - [x] User类
 - [x] Reader类
-- [ ] Administrator类
+- [x] Administrator类
+
+## 主程序
+## GUI

@@ -74,7 +74,7 @@ test_reader2 = Reader(2, "test", db, cursor)
 #     print(i)
 # for i in test_admin.view_reader_record(1):
 #     print(i)
-for i in test_admin.query_out_date(30):
-    print(i)
+# for i in test_admin.query_out_date(30):
+#     print(i)
 close_connect(db, cursor)
 
