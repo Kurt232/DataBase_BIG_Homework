@@ -27,11 +27,39 @@ def deal_with(data) -> str:
         user = Administrator(info["name"], info["account"], db, cursor)
     ls = []
     for i in range(0, info["len"]):
+        """user"""
+        if info["type"] == "query_book":
+            ls.append(user.query_book(info["info"]))
         """reader"""
         if info["type"] == "borrow_book":
-            ls.append(user.borrow_book())
+            ls.append(user.borrow_book(info["id_book"], info["interval"]))
         if info["type"] == "return_book":
-            ls.append(user.return_book())
+            ls.append(user.return_book(info["id_record"], info["interval"]))
         if info["type"] == "view_info":
-            ls.append(user.)
+            ls.append(user.view_info())
         if info["type"] == "view_record":
+            ls.append(user.view_record())
+        """admin"""
+        if info["type"] == "add_book":
+            ls.append(user.add_book(info["info"]))
+        if info["type"] == "add_reader":
+            ls.append(user.add_reader(info["info"]))
+        if info["type"] == "delete_book":
+            ls.append(user.delete_book(info["info"]))
+        if info["type"] == "delete_reader":
+            ls.append(user.delete_reader(info["info"]))
+        if info["type"] == "update_book":
+            ls.append(user.update_book(info["info"]))
+        if info["type"] == "update_reader":
+            ls.append(user.update_reader(info["info"]))
+        if info["type"] == "query_reader":
+            ls.append(user.query_reader(info["info"]))
+        if info["type"] == "view_reader_info":
+            ls.append(user.view_reader_info(info["info"]))
+        if info["type"] == "view_reader_record":
+            ls.append(user.view_reader_record(info["info"]))
+        if info["type"] == "query_out_date":
+            ls.append(user.query_out_date(info["interval"]))
+    return json.dumps(ls)
+
+                                        
