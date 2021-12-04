@@ -19,9 +19,9 @@ from database_module import *
 
 
 class Reader(User):
-    def __init__(self, reader_id, account, db, cursor):
+    def __init__(self, id_reader, account, db, cursor):
         super().__init__(account, db, cursor)
-        self.id = reader_id
+        self.id = id_reader
 
     # pass test
     # 借书的时候用book_id借 interval是还书间隔
