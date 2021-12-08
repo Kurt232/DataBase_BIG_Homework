@@ -29,7 +29,7 @@ class User:
     # 包括：书号、书名、出版社、出版日期、作者、内容摘要
     # 若为空 用 "" 标注
     # 输出的时候是三列 书籍信息 总数 在馆数量
-    def query_book(self, info) -> list:
+    def query_book(self, info: list) -> list:
         attribute_book = ["id_book", "book_no", "book_name", "publisher", "date_publish", "author", "book"]
         info1 = []
         ls_info = []  # 这里面没有 id_book

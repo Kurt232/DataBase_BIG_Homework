@@ -20,7 +20,8 @@ attributes:
 2. 读者号 "id_reader" int not null foreign key 
 3. 书籍号 "id_book" int not null foreign key 
 4. 借书日期 "date_borrow" date
-5. 应还书日期  "out_date" int
+5. 还书日期 "date_return" date
+6. 超期天数 "out_date" int
 
 
 out_date(初始值为-1 正常还书为0 超期>0)

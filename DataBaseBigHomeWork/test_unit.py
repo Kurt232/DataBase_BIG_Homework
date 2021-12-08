@@ -13,6 +13,7 @@
 from init_library import init_library
 from administrator import *
 from reader import *
+from tkinter import *
 
 # 初始化database
 
@@ -78,3 +79,25 @@ test_reader2 = Reader(2, "test", db, cursor)
 #     print(i)
 close_connect(db, cursor)
 
+"""win test"""
+# 有bug我也没办法
+# info = [[["a", "a", "a", "a", "a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"], ["b", "b", "b", "b", "b", "b"], ["c", "c", "c", "c", "c", "c"]],
+#         [1, 1, 1], [2, 2, 2]]
+# root = Tk()
+# fr4 = Frame(root, width=600, height=300)
+# fr4.grid()
+# for i in range(0, 3):
+#     for j in range(0, 6):
+#         lbl12 = Label(fr4, width=20)
+#         lbl12["text"] = info[0][i][j]
+#         lbl12.grid(column=j, row=i + 1)
+#     lbl13 = Label(fr4, width=20)
+#     lbl13["text"] = info[1][i]
+#     lbl13.grid(column=6, row=i + 1)
+#     lbl14 = Label(fr4, width=20)
+#     lbl14["text"] = info[2][i]
+#     lbl14.grid(column=7, row=i + 1)
+# # fr4.grid_forget()  # 解决
+# for i in fr4.grid_info():
+#     print(i)
+# root.mainloop()
