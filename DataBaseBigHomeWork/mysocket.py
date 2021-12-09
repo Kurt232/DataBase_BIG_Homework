@@ -87,7 +87,7 @@ def socket_client(info: str, port: int) -> str:
 
 # 涉及到端口的得到和释放
 # 尝试用多进程来解决
-def socket_service(info=False, port=8888):
+def socket_service_reader(info=False, port=8888):
     address = ('192.168.1.108', port)  # 服务端地址和端口
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(address)  # 绑定服务端地址和端口
@@ -106,7 +106,39 @@ def socket_service(info=False, port=8888):
                     if msg:  # msg 非空 登录成功
                         conn.sendall(str(port+1).encode())
                         if __name__ == '__main__':
-                            p = Process(target=socket_service(port=port+1), args=('Python',))
+                            p = Process(target=socket_service_reader(port=port+1), args=('Python',))
+                            p.start()
+                    else:
+                        conn.sendall("failure".encode())
+                else:
+                    conn.sendall(deal_with(data).encode())
+                    break
+            conn.close()
+            s.close()
+
+
+# 涉及到端口的得到和释放
+# 尝试用多进程来解决
+def socket_service_admin(info=False, port=8888):
+    address = ('192.168.1.108', port)  # 服务端地址和端口
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(address)  # 绑定服务端地址和端口
+        s.listen(5)  # listen 的消息数量为 5
+        conn, addr = s.accept()  # 返回客户端地址和一个新的 socket 连接
+        print('[+] Connected with', addr)
+        with conn:
+            while True:
+                data = conn.recv(1024)  # buffer_size 等于 1024
+                data = data.decode()
+                if info:
+                    # 默认在端口号+1 的场景下工作 多进程程
+                    if not data:
+                        break
+                    msg = login_check_admin(data)  # 进行登录检查
+                    if msg:  # msg 非空 登录成功
+                        conn.sendall(str(port+1).encode())
+                        if __name__ == '__main__':
+                            p = Process(target=socket_service_admin(port=port+1), args=('Python',))
                             p.start()
                     else:
                         conn.sendall("failure".encode())
