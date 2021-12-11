@@ -58,6 +58,7 @@ class Admin:
             print("请输入账号")
             self.account = self.input()
             if self.account == '~e':
+                print("bye!")
                 sys.exit(0)
             elif len(self.account) > 100000000:
                 print("用户名太长")
@@ -256,6 +257,7 @@ class Admin:
         flag = True
         while flag:
             if cin == '~e':
+                print("bye!")
                 sys.exit(0)
             elif cin == '~l':
                 flag = False
