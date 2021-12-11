@@ -54,9 +54,7 @@ def deal_with(data) -> str:
             ls.append(user.update_reader(info["info"]))
         if info["type"] == "query_reader":
             ls.append(user.query_reader(info["info"]))
-        if info["type"] == "view_reader_info":
-            ls.append(user.view_reader_info(info["info"]))
-        if info["type"] == "view_reader_record":
+        if info["type"] == "query_reader_record":
             ls.append(user.view_reader_record(info["info"]))
         if info["type"] == "query_out_date":
             ls.append(user.query_out_date(info["interval"]))

@@ -1,4 +1,4 @@
-# 数据库大作业
+# 数据库大作业 1.0
 
 ## 用python实现
 
@@ -6,7 +6,7 @@
 #### 读者表
 "reader"
 attributes: 
-1. 读者号 "id_reader" int not null primary key auto_increment
+1. 读者id "id_reader" int not null primary key auto_increment
 2. 证件号 "certificate" int
 3. 名字 "name" varchar(255) 
 4. 性别 "sex" enum('male','female') not null 
@@ -16,7 +16,7 @@ attributes:
 #### 借还书表
 "record"
 attributes: 
-1. 记录号 "id_record" int not null primary key auto_increment
+1. 记录id "id_record" int not null primary key auto_increment
 2. 读者号 "id_reader" int not null foreign key 
 3. 书籍号 "id_book" int not null foreign key 
 4. 借书日期 "date_borrow" date
@@ -80,5 +80,16 @@ attributes:
 - [x] Reader类
 - [x] Administrator类
 
-## 主程序
-## GUI
+## main
+### server
+#### reader
+#### admin
+### client
+#### reader
+大致写完了  
+有点丑陋算是1.0版本
+#### admin
+命令行模式
+## GUI and client
+运用tkinter  
+最后只在读者客户端实现，管理员客户端使用命令行界面

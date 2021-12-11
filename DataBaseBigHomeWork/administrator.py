@@ -124,6 +124,6 @@ class Administrator(User):
 
     """查询哪些读者没有及时还书界面"""
     # pass test
-    # interval 是借书期限 也是全局变量
-    def query_out_date(self, interval) -> list:
+    # interval 是借书期限 也是全局变量 默认是30天
+    def query_out_date(self, interval=30) -> list:
         return select_out_date(str(interval), self.cursor)

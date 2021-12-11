@@ -24,13 +24,14 @@ def check_login():
     global port
     info = {"account": E_account.get(), "password": E_password.get()}
     data = json.dumps(info)
-    port = socket_client(data, 8888)
-    if port == "404":
+    check: str = socket_client(data, 8888)
+    if check == "404":
         messagebox.showerror(title="警告", message="与服务器未连接")
-    elif port == "failure":
+    elif check == "failure":
         messagebox.showinfo(title="错误", message="账号或密码错误")
     else:
         messagebox.showinfo(title="信息", message="登录成功")
+        port = int(check)
         flag = True
 
 
