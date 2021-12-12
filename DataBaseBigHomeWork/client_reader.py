@@ -19,6 +19,7 @@ import json
 """reader"""
 
 
+# 读者id 就是账号
 def check_login():
     global flag
     global port
@@ -138,7 +139,7 @@ def record_query():
             port = 8888
         else:
             info = json.loads(feedback)
-            for i in range(0, 5):
+            for i in range(0, 6):
                 lbl26 = Label(fr4, width=20)
                 lbl26["text"] = info[i]
                 lbl26.grid(column=i, row=1)

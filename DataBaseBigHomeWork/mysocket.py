@@ -12,13 +12,14 @@
 """
 
 import socket
-from deal_module import *
 from multiprocessing import *
+from reader import *
+from administrator import *
 import json
 
 
 # 返回类型是一个json字符串 内容: id_reader account
-# data = "{ "account" : "x", "password" : "x"}"
+# data ::= [[id_reader, "account", "password"],]
 # { info : [id_reader, "account", "password"]}
 def login_check_reader(data) -> str:
     id_reader = 0
@@ -29,22 +30,21 @@ def login_check_reader(data) -> str:
     info = json.loads(data)
     flag = False
     for i in json_data:
-        if info["account"] == i["info"][1] and info["password"] == i["info"][2]:
-            id_reader = i["info"][0]
+        if info["account"] == i[1] and info["password"] == i[2]:
+            id_reader = i[0]
             account = info["account"]
             flag = True
             break
     if flag:
-        with open("regedit.json", "r", encoding="utf-8") as fp:
-            json_data = json.load(fp)
-            fp.close()
-        send = {"id_reader": id_reader, "account": account, "login": json_data["login"]}
+        send = {"user": "reader", id_reader: id_reader, "account": account}
         return json.dumps(send)
     else:
         return ""
 
 
 # { info : ["name", "account", "password"]}
+# login_admin.json
+# [["name", "account", "password"],]
 def login_check_admin(data) -> str:
     name = ""
     account = ""
@@ -54,16 +54,13 @@ def login_check_admin(data) -> str:
     info = json.loads(data)
     flag = False
     for i in json_data:
-        if info["account"] == i["info"][1] and info["password"] == i["info"][2]:
-            name = i["info"][0]
+        if info["account"] == i[1] and info["password"] == i[2]:
+            name = i[0]
             account = info["account"]
             flag = True
             break
     if flag:
-        with open("regedit.json", "r", encoding="utf-8") as fp:
-            json_data = json.load(fp)
-            fp.close()
-        send = {"name": name, "account": account, "login": json_data["login"]}
+        send = {"user": "admin", "name": name, "account": account}
         return json.dumps(send)
     else:
         return ""
@@ -87,63 +84,90 @@ def socket_client(info: str, port: int) -> str:
 
 # 涉及到端口的得到和释放
 # 尝试用多进程来解决
-def socket_service_reader(info=False, port=8888):
+def socket_service(port=8888):
     address = ('192.168.1.108', port)  # 服务端地址和端口
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(address)  # 绑定服务端地址和端口
         s.listen(5)  # listen 的消息数量为 5
-        conn, addr = s.accept()  # 返回客户端地址和一个新的 socket 连接
-        print('[+] Connected with', addr)
-        with conn:
-            while True:
-                data = conn.recv(1024)  # buffer_size 等于 1024
-                data = data.decode()
-                if info:
-                    # 默认在端口号+1 的场景下工作 多进程程
-                    if not data:
-                        break
-                    msg = login_check_reader(data)  # 进行登录检查
-                    if msg:  # msg 非空 登录成功
-                        conn.sendall(str(port+1).encode())
-                        if __name__ == '__main__':
-                            p = Process(target=socket_service_reader(port=port+1), args=('Python',))
-                            p.start()
-                    else:
-                        conn.sendall("failure".encode())
+        while True:
+            conn, addr = s.accept()  # 返回客户端地址和一个新的 socket 连接
+            data = conn.recv(1024)  # buffer_size 等于 1024
+            data = data.decode()
+            # 默认在端口号+1 的场景下工作 多进程程
+            if data:
+                msg = login_check_admin(data)  # 进行登录检查
+                if msg:  # msg 非空 登录成功
+                    conn.sendall(str(7777).encode())
                 else:
-                    conn.sendall(deal_with(data).encode())
-                    break
+                    conn.sendall("failure".encode())
             conn.close()
-            s.close()
 
 
-# 涉及到端口的得到和释放
-# 尝试用多进程来解决
-def socket_service_admin(info=False, port=8888):
+# info 是json格式的str
+# 返回值也是一个json的str 不过内部是 list
+def deal_with(conn, db, cursor):
+    data = conn.recv(1024)
+    info = json.loads(data.decode())
+    if info["user"] == "reader":
+        user = Reader(info["id_reader"], info["account"], db, cursor)
+    else:
+        user = Administrator(info["name"], info["account"], db, cursor)
+    ls = []
+    try:
+        for i in range(0, info["len"]):
+            """user"""
+            if info["type"] == "query_book":
+                ls.append(user.query_book(info["info"]))
+            """reader"""
+            if info["type"] == "borrow_book":
+                ls.append(user.borrow_book(info["id_book"], info["interval"]))
+            if info["type"] == "return_book":
+                ls.append(user.return_book(info["id_record"], info["interval"]))
+            if info["type"] == "view_info":
+                ls.append(user.view_info())
+            if info["type"] == "view_record":
+                ls.append(user.view_record())
+            """admin"""
+            if info["type"] == "add_book":
+                ls.append(user.add_book(info["info"]))
+            if info["type"] == "add_reader":
+                ls.append(user.add_reader(info["info"]))
+            if info["type"] == "delete_book":
+                ls.append(user.delete_book(info["info"]))
+            if info["type"] == "delete_reader":
+                ls.append(user.delete_reader(info["info"]))
+            if info["type"] == "update_book":
+                ls.append(user.update_book(info["info"]))
+            if info["type"] == "update_reader":
+                ls.append(user.update_reader(info["info"]))
+            if info["type"] == "query_reader":
+                ls.append(user.query_reader(info["info"]))
+            if info["type"] == "record_reader":
+                ls.append(user.view_reader_record(info["info"]))
+            if info["type"] == "record_book":
+                ls.append(user.view_reader_record(info["info"]))  # 要改
+            if info["type"] == "query_out_date":
+                ls.append(user.query_out_date(info["interval"]))
+    except Exception:
+        conn.sendall("failure".encode())
+        conn.close()
+    if conn:
+        if not ls:
+            conn.sendall("failure".encode())
+        else:
+            conn.sendall(json.dumps(ls).encode())
+        conn.close()
+
+
+def socket_execute(port, db, cursor):
     address = ('192.168.1.108', port)  # 服务端地址和端口
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(address)  # 绑定服务端地址和端口
         s.listen(5)  # listen 的消息数量为 5
-        conn, addr = s.accept()  # 返回客户端地址和一个新的 socket 连接
-        print('[+] Connected with', addr)
-        with conn:
-            while True:
-                data = conn.recv(1024)  # buffer_size 等于 1024
-                data = data.decode()
-                if info:
-                    # 默认在端口号+1 的场景下工作 多进程程
-                    if not data:
-                        break
-                    msg = login_check_admin(data)  # 进行登录检查
-                    if msg:  # msg 非空 登录成功
-                        conn.sendall(str(port+1).encode())
-                        if __name__ == '__main__':
-                            p = Process(target=socket_service_admin(port=port+1), args=('Python',))
-                            p.start()
-                    else:
-                        conn.sendall("failure".encode())
-                else:
-                    conn.sendall(deal_with(data).encode())
-                    break
+        while True:
+            conn, addr = s.accept()  # 返回客户端地址和一个新的 socket 连接
+            if __name__ == '__main__':
+                p = Process(target=deal_with, args=(conn,))
+                p.start()
             conn.close()
-            s.close()
