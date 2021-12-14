@@ -172,6 +172,24 @@ def record_query():
                     lbl26.grid(column=i, row=i+2)
 
 
+def book_return():
+    global port
+    if port == 8888:
+        messagebox.showerror(title="警告", message="还未登录")
+    data = {"type": "return_book", "id_reader": id_reader, "id_record": return_ety.get()}
+    data_json = json.dumps(data)
+    feedback = socket_client(data_json, port)
+    if feedback == "404":
+        messagebox.showwarning(title="警告", message="登录已过期， 请重新登录")
+        port = 8888
+    else:
+        info = json.loads(feedback)
+        if info > 0:
+            messagebox.showinfo(title="还书成功", message="您已经超期" + str(info) + "天")
+        else:
+            messagebox.showinfo(title="借书成功", message="还书成功")
+
+
 if __name__ == '__main__':
     # 登录界面
     # 返回一个json字符串
@@ -259,7 +277,7 @@ if __name__ == '__main__':
     lbl24 = Label(fr4, text="还书日期")
     lbl25 = Label(fr4, text="超期天数")
     return_lbl = Label(fr4, text="输入记录号还书")
-    return_ety = Entry(fr4, bg = 10)
+    return_ety = Entry(fr4, bg=10)
     return_but = Button(fr4, text="还书", command=book_return, width=10, fg="green")
 
     # 关闭窗口后终止程序
