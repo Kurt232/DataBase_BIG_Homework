@@ -21,13 +21,12 @@ import json
 # 返回类型是一个json字符串 内容: id_reader account
 # data ::= [[id_reader, "account", "password"],]
 # { info : [id_reader, "account", "password"]}
-def login_check_reader(data) -> str:
+def login_check_reader(info) -> str:
     id_reader = 0
     account = ""
-    with open("login_reader.json", "r", encoding="utf-8") as fp:
+    with open(r"C:\Users\Karl\Desktop\Python\DataBaseBigHomeWork\login_reader.json", "r", encoding="utf-8") as fp:
         json_data = json.load(fp)
         fp.close()
-    info = json.loads(data)
     flag = False
     for i in json_data:
         if info["account"] == i[1] and info["password"] == i[2]:
@@ -36,7 +35,7 @@ def login_check_reader(data) -> str:
             flag = True
             break
     if flag:
-        send = {"user": "reader", id_reader: id_reader, "account": account}
+        send = {"user": "reader", "id_reader": id_reader, "account": account, "port": 7777}
         return json.dumps(send)
     else:
         return ""
@@ -45,13 +44,12 @@ def login_check_reader(data) -> str:
 # { info : ["name", "account", "password"]}
 # login_admin.json
 # [["name", "account", "password"],]
-def login_check_admin(data) -> str:
+def login_check_admin(info) -> str:
     name = ""
     account = ""
-    with open("login_admin.json", "r", encoding="utf-8") as fp:
+    with open(r"C:\Users\Karl\Desktop\Python\DataBaseBigHomeWork\login_admin.json", "r", encoding="utf-8") as fp:
         json_data = json.load(fp)
         fp.close()
-    info = json.loads(data)
     flag = False
     for i in json_data:
         if info["account"] == i[1] and info["password"] == i[2]:
@@ -60,7 +58,7 @@ def login_check_admin(data) -> str:
             flag = True
             break
     if flag:
-        send = {"user": "admin", "name": name, "account": account}
+        send = {"user": "admin", "name": name, "account": account, "port": 7777}
         return json.dumps(send)
     else:
         return ""
@@ -68,7 +66,7 @@ def login_check_admin(data) -> str:
 
 # 以json字符串形式返回
 def socket_client(info: str, port: int) -> str:
-    address = ('192.168.1.108', port)  # 服务端地址和端口
+    address = ('192.168.1.101', port)  # 服务端地址和端口
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # noinspection PyBroadException
         try:
@@ -85,19 +83,23 @@ def socket_client(info: str, port: int) -> str:
 # 涉及到端口的得到和释放
 # 尝试用多进程来解决
 def socket_service(port=8888):
-    address = ('192.168.1.108', port)  # 服务端地址和端口
+    address = ('192.168.1.101', port)  # 服务端地址和端口
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(address)  # 绑定服务端地址和端口
         s.listen(5)  # listen 的消息数量为 5
         while True:
             conn, addr = s.accept()  # 返回客户端地址和一个新的 socket 连接
             data = conn.recv(1024)  # buffer_size 等于 1024
-            data = data.decode()
+            info = json.loads(data.decode())
             # 默认在端口号+1 的场景下工作 多进程程
             if data:
-                msg = login_check_admin(data)  # 进行登录检查
+                if info["user"] == "admin":
+                    msg = login_check_admin(info)  # 进行登录检查
+                elif info["user"] == "reader":
+                    msg = login_check_reader(info)
                 if msg:  # msg 非空 登录成功
-                    conn.sendall(str(7777).encode())
+                    conn.sendall(msg.encode())
                 else:
                     conn.sendall("failure".encode())
             conn.close()
@@ -105,7 +107,8 @@ def socket_service(port=8888):
 
 # info 是json格式的str
 # 返回值也是一个json的str 不过内部是 list
-def deal_with(conn, db, cursor):
+def deal_with(conn):
+    db, cursor = connect_database(["localhost", "library", "123456"])
     data = conn.recv(1024)
     info = json.loads(data.decode())
     if info["user"] == "reader":
@@ -113,6 +116,7 @@ def deal_with(conn, db, cursor):
     else:
         user = Administrator(info["name"], info["account"], db, cursor)
     ls = []
+    # noinspection PyBroadException
     try:
         for i in range(0, info["len"]):
             """user"""
@@ -131,7 +135,14 @@ def deal_with(conn, db, cursor):
             if info["type"] == "add_book":
                 ls.append(user.add_book(info["info"]))
             if info["type"] == "add_reader":
-                ls.append(user.add_reader(info["info"]))
+                user.add_reader(info["info"])
+                ls.append(user.query_reader(info["info"])[0][0])  # 返回id_reader
+                with open(r"C:\Users\Karl\Desktop\Python\DataBaseBigHomeWork\login_reader.json", "r+") as fp:
+                    data: list = json.load(fp)
+                    data.append({"account": str(ls[0]), "password": 123456})
+                    json.dump(data, fp)
+                    fp.close()
+                # 写日志
             if info["type"] == "delete_book":
                 ls.append(user.delete_book(info["info"]))
             if info["type"] == "delete_reader":
@@ -159,8 +170,8 @@ def deal_with(conn, db, cursor):
         conn.close()
 
 
-def socket_execute(port, db, cursor):
-    address = ('192.168.1.108', port)  # 服务端地址和端口
+def socket_execute(port, lock):
+    address = ('192.168.1.101', port)  # 服务端地址和端口
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(address)  # 绑定服务端地址和端口
@@ -168,6 +179,6 @@ def socket_execute(port, db, cursor):
         while True:
             conn, addr = s.accept()  # 返回客户端地址和一个新的 socket 连接
             if __name__ == '__main__':
-                p = Process(target=deal_with, args=(conn,))
+                p = Process(target=deal_with, args=(conn, lock))
                 p.start()
             conn.close()

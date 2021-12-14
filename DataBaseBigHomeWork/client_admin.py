@@ -22,7 +22,7 @@ class Admin:
         self.name = ""
         self.account = ""
         self.password = ""
-        self.port = 8000
+        self.port = 8008
         self.online = False
 
     @staticmethod
@@ -69,7 +69,7 @@ class Admin:
             print("请输入密码")
             self.password = input()
             print("正在登录，请稍等")
-            info = {"type": "login", "account": self.account, "password": self.password}
+            info = {"type": "login", "account": self.account, "password": self.password, "user": "admin"}
             data = json.dumps(info)
             check: str = socket_client(data, self.port)
             if check == "404":

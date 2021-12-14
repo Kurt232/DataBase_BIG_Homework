@@ -24,17 +24,21 @@ class Reader(User):
         self.id = id_reader
 
     # pass test
-    # 借书的时候用book_id借 interval是还书间隔
+    # 借书的时候用book_no借 interval是还书间隔
     # 见图(上级界面负责控制)
     # 如失败 发出信息 借书失败，有x本超期未还书籍 返回x
     # 成功是返回0发出消息
     # 不会出现 把一本不在库中的书借走 由上级界面控制
-    def borrow_book(self, id_book, interval) -> int:
+    def borrow_book(self, book_no, interval) -> int:
         num = select_out_reader([str(self.id), str(interval)], self.cursor)
         if num > 0:
             return num
         now = date.today()
         date_borrow = now.isoformat()
+        sql = "select id_book from book where not exists (" \
+              "select * from record where out_date = -1 and id_book =(" \
+              "select id_book from book where book_no = " + book_no + " ))"
+        id_book = select_execute(sql, self.cursor)
         insert_record_borrow([str(self.id), str(id_book), "'" + str(date_borrow) + "'", "null", '-1'], self.db, self.cursor)
         return num
 
@@ -64,7 +68,7 @@ class Reader(User):
     # pass test
     # 未还书的记录再上面，上级界面检测到 out_date为-1即不显示即可
     def view_record(self) -> list:
-        return select_record(str(self.id), self.cursor)
+        return select_record_reader(str(self.id), self.cursor)
 
 
 

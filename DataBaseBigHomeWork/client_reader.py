@@ -12,7 +12,6 @@
 """
 from tkinter import *
 from tkinter import messagebox
-import tkinter as tk
 from mysocket import *
 import json
 
@@ -23,7 +22,8 @@ import json
 def check_login():
     global flag
     global port
-    info = {"account": E_account.get(), "password": E_password.get()}
+    global id_reader
+    info = {"user": "reader", "account": E_account.get(), "password": E_password.get()}
     data = json.dumps(info)
     check: str = socket_client(data, 8888)
     if check == "404":
@@ -32,7 +32,9 @@ def check_login():
         messagebox.showinfo(title="错误", message="账号或密码错误")
     else:
         messagebox.showinfo(title="信息", message="登录成功")
-        port = int(check)
+        recv = json.loads(check)
+        port = recv["port"]
+        id_reader = recv["id_reader"]
         flag = True
 
 
@@ -63,7 +65,7 @@ def send_query():
         messagebox.showerror(title="警告", message="还未登录")
     else:
         ls = [ety0.get(), ety1.get(), ety2.get(), ety3.get(), ety4.get(), ety5.get()]
-        data = {"type": "query_book", "info": ls}
+        data = {"type": "query_book", "info": ls, "id_reader": id_reader}
         data_json = json.dumps(data)
         # 返回查询到的信息
         feedback = socket_client(data_json, port)
@@ -73,25 +75,28 @@ def send_query():
         else:
             fr4.grid_forget()
             info: list = json.loads(feedback)
-            lbl11.grid(column=1, row=0)
-            lbl10.grid(column=0, row=0)
-            lbl4.grid(column=2, row=0)
-            lbl5.grid(column=3, row=0)
-            lbl6.grid(column=4, row=0)
-            lbl7.grid(column=5, row=0)
-            lbl8.grid(column=6, row=0)
-            lbl9.grid(column=7, row=0)
+            borrow_lbl.grid(column=0, row=0)
+            borrow_but.grid(column=1, row=0)
+            borrow_ety.grid(column=2, row=0)
+            lbl11.grid(column=1, row=1)
+            lbl10.grid(column=0, row=1)
+            lbl4.grid(column=2, row=1)
+            lbl5.grid(column=3, row=1)
+            lbl6.grid(column=4, row=1)
+            lbl7.grid(column=5, row=1)
+            lbl8.grid(column=6, row=1)
+            lbl9.grid(column=7, row=1)
             for i in range(0, len(info[0])):
                 for j in range(0, 6):
                     lbl12 = Label(fr4, width=20)
                     lbl12["text"] = info[0][i][j]
-                    lbl12.grid(column=j, row=i + 1)
+                    lbl12.grid(column=j, row=i + 2)
                 lbl13 = Label(fr4, width=20)
                 lbl13["text"] = info[1][i]
-                lbl13.grid(column=6, row=i + 1)
+                lbl13.grid(column=6, row=i + 2)
                 lbl14 = Label(fr4, width=20)
                 lbl14["text"] = info[2][i]
-                lbl14.grid(column=7, row=i + 1)
+                lbl14.grid(column=7, row=i + 2)
 
 
 # id_reader都在服务器上
@@ -106,7 +111,7 @@ def query_reader():
         lbl17.grid(column=2, row=0)
         lbl18.grid(column=3, row=0)
         lbl19.grid(column=4, row=0)
-        data = {"type": "view_info"}
+        data = {"type": "view_info", "id_reader": id_reader}
         data_json = json.dumps(data)
         feedback = socket_client(data_json, port)
         if feedback == "404":
@@ -120,18 +125,39 @@ def query_reader():
                 lbl20.grid(column=i, row=1)
 
 
+def book_borrow():
+    global port
+    if port == 8888:
+        messagebox.showerror(title="警告", message="还未登录")
+    data = {"type": "borrow_book", "id_reader": id_reader, "book_no": borrow_ety.get()}
+    data_json = json.dumps(data)
+    feedback = socket_client(data_json, port)
+    if feedback == "404":
+        messagebox.showwarning(title="警告", message="登录已过期， 请重新登录")
+        port = 8888
+    else:
+        info = json.loads(feedback)
+        if info > 0:
+            messagebox.showinfo(title="借书失败", message="您有" + str(info) + "待还")
+        else:
+            messagebox.showinfo(title="借书成功", message="借书成功")
+
+
 def record_query():
     global port
     if port == 8888:
         messagebox.showerror(title="警告", message="还未登录")
     else:
         fr4.grid_forget()
-        lbl21.grid(column=0, row=0)
-        lbl22.grid(column=1, row=0)
-        lbl23.grid(column=2, row=0)
-        lbl24.grid(column=3, row=0)
-        lbl25.grid(column=4, row=0)
-        data = {"type": "view_record"}
+        return_lbl.grid(column=0, row=0)
+        return_but.grid(column=1, row=0)
+        return_ety.grid(column=2, row=0)
+        lbl21.grid(column=0, row=1)
+        lbl22.grid(column=1, row=1)
+        lbl23.grid(column=2, row=1)
+        lbl24.grid(column=3, row=1)
+        lbl25.grid(column=4, row=1)
+        data = {"type": "view_record", "id_reader": id_reader}
         data_json = json.dumps(data)
         feedback = socket_client(data_json, port)
         if feedback == "404":
@@ -139,10 +165,11 @@ def record_query():
             port = 8888
         else:
             info = json.loads(feedback)
-            for i in range(0, 6):
-                lbl26 = Label(fr4, width=20)
-                lbl26["text"] = info[i]
-                lbl26.grid(column=i, row=1)
+            for i in range(0, len(info)):
+                for j in range(0, 6):
+                    lbl26 = Label(fr4, width=20)
+                    lbl26["text"] = info[i][j]
+                    lbl26.grid(column=i, row=i+2)
 
 
 if __name__ == '__main__':
@@ -153,8 +180,9 @@ if __name__ == '__main__':
     # global
     flag = False
     port = 8888
+    id_reader = 0
     # 背景
-    photo = PhotoImage(file="assert/img.png")
+    photo = PhotoImage(file=r"C:\Users\Karl\Desktop\Python\DataBaseBigHomeWork\assert\img.png")
     fr0 = Frame(root, width=400, height=225)
     fr0.grid(column=0, row=0)
     background = Label(fr0, image=photo, width=400, height=225)
@@ -172,7 +200,7 @@ if __name__ == '__main__':
     L_password.grid(column=0, row=2)
     E_password = Entry(fr1, bd=10)
     E_password.grid(column=1, row=2)
-    log_in = Button(fr1, text="login", command=lambda: check_login(), bg="green", width=10)
+    log_in = Button(fr1, text="login", command=lambda: check_login, bg="green", width=10)
     log_in.grid(column=0, row=3)
     log_quit = Button(fr1, text="quit", command=lambda: sys.exit(0), bg="red", width=10)
     log_quit.grid(column=1, row=3)
@@ -184,7 +212,7 @@ if __name__ == '__main__':
     Lbl1 = Label(fr2, text="菜单", font=("Arial", 30))
     Lbl1.grid(column=0, row=0)
     # 查书 查到后点开 刷新后 再点书籍可以借书
-    lbl2 = Label(fr2, text="点击书籍详情进行借书")
+    lbl2 = Label(fr2, text="书籍查询界面中进行借书")
     lbl2.grid(column=1, row=1)
     query_book = Button(fr2, text="查询书籍", command=book_query, width=10)
     query_book.grid(column=0, row=1)
@@ -205,6 +233,9 @@ if __name__ == '__main__':
     # 展示书籍信息 弄一个框框
     lbl10 = Label(fr4, text="书籍总数")
     lbl11 = Label(fr4, text="在馆数量")
+    borrow_lbl = Label(fr4, text="输入书号借书:")
+    borrow_ety = Entry(fr4, bd=10)
+    borrow_but = Button(fr4, text="借书", command=book_borrow, width=10, fg="green")
     # 个人信息
     query_info = Button(fr2, text="个人信息", width=10, command=query_reader)
     query_info.grid(column=0, row=2)
@@ -220,13 +251,17 @@ if __name__ == '__main__':
     # 借还书情况 点击书籍 进行还书
     query_record = Button(fr2, text="借还书情况", width=10, command=record_query)
     query_record.grid(column=0, row=3)
-    lbl3 = Label(fr2, text="点击待还书籍信息，进行还书")
+    lbl3 = Label(fr2, text="输入待还记录号，进行还书")
     lbl3.grid(column=1, row=3)
     lbl21 = Label(fr4, text="记录号")
     lbl22 = Label(fr4, text="书名")  # 需要处理 放在服务器端处理算了
     lbl23 = Label(fr4, text="借书日期")
     lbl24 = Label(fr4, text="还书日期")
     lbl25 = Label(fr4, text="超期天数")
+    return_lbl = Label(fr4, text="输入记录号还书")
+    return_ety = Entry(fr4, bg = 10)
+    return_but = Button(fr4, text="还书", command=book_return, width=10, fg="green")
+
     # 关闭窗口后终止程序
     # 功能显示区
 
